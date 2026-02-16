@@ -25,7 +25,7 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
         --memory-size 512 \
         --environment Variables="{
             AWS_REGION=$REGION,
-            BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0,
+            BEDROCK_MODEL_ID=anthropic.claude-3-7-sonnet-20250219-v1:0,
             BEDROCK_AGENT_ID=${BEDROCK_AGENT_ID:-}
         }" \
         --region $REGION
@@ -70,7 +70,7 @@ else
         --memory-size 512 \
         --environment Variables="{
             AWS_REGION=$REGION,
-            BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0,
+            BEDROCK_MODEL_ID=anthropic.claude-3-7-sonnet-20250219-v1:0,
             BEDROCK_AGENT_ID=${BEDROCK_AGENT_ID:-}
         }" \
         --region $REGION

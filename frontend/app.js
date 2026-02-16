@@ -187,6 +187,16 @@ function switchMode(mode) {
 }
 
 async function generateQuestion() {
+    if (CONFIG.isApiPlaceholder()) {
+        alert(
+            'API not configured.\n\n' +
+            'Replace YOUR_API_ID in frontend/config.js with your API Gateway ID.\n\n' +
+            'After deploying your Lambda and API Gateway, set:\n' +
+            'API_ENDPOINT: \'https://<your-api-id>.execute-api.eu-central-1.amazonaws.com/prod\''
+        );
+        return;
+    }
+
     const topic = document.getElementById('topic-select')?.value || currentTopic;
     const subtopic = document.getElementById('subtopic-select')?.value || currentSubtopic;
     const difficulty = difficultySelector.getSelected() || currentDifficulty;
@@ -254,8 +264,16 @@ async function generateQuestion() {
         // Update progress tracking
         updateProgressTracking(topic, subtopic, difficulty);
 
+        updateQuestionNavButtons();
+
     } catch (error) {
         console.error('Error generating question:', error);
+        if (error.message === 'Failed to fetch' && CONFIG.isApiPlaceholder()) {
+            alert(
+                'Could not reach the API. Make sure YOUR_API_ID in frontend/config.js is replaced with your real API Gateway ID.'
+            );
+            return;
+        }
         const errorMessage = error.message || 'Failed to generate question. Please try again.';
         alert(`Error: ${errorMessage}\n\nCheck the browser console for more details.`);
     } finally {
@@ -265,6 +283,12 @@ async function generateQuestion() {
 }
 
 async function submitAnswer() {
+    if (CONFIG.isApiPlaceholder()) {
+        alert(
+            'API not configured. Replace YOUR_API_ID in frontend/config.js with your API Gateway ID.'
+        );
+        return;
+    }
     if (!currentQuestion) {
         alert('Please generate a question first');
         return;
@@ -283,16 +307,23 @@ async function submitAnswer() {
     btn.disabled = true;
 
     try {
+        const topic = currentQuestion.topic ?? currentTopic;
+        const difficulty = currentQuestion.difficulty ?? currentDifficulty;
+        if (!topic || !currentQuestion.question) {
+            alert('Missing question data. Please generate a new question.');
+            return;
+        }
+
         const response = await fetch(`${CONFIG.API_ENDPOINT}${CONFIG.ENDPOINTS.evaluateAnswer}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                topic: currentQuestion.topic,
+                topic,
                 question: currentQuestion.question,
                 user_answer: userAnswer,
-                difficulty: currentQuestion.difficulty
+                difficulty
             })
         });
 
@@ -300,7 +331,27 @@ async function submitAnswer() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const feedback = await response.json();
+        const data = await response.json();
+
+        // Handle API Gateway response format (body may be a string)
+        let feedback = data;
+        if (data.body !== undefined) {
+            if (typeof data.body === 'string') {
+                try {
+                    feedback = JSON.parse(data.body);
+                } catch (e) {
+                    console.error('Error parsing evaluate response body:', e);
+                    throw new Error('Invalid response format from server');
+                }
+            } else {
+                feedback = data.body;
+            }
+        }
+
+        if (feedback.error) {
+            throw new Error(feedback.message || feedback.error);
+        }
+
         feedbackPanel.display(feedback);
 
         // Stop timer
@@ -313,7 +364,8 @@ async function submitAnswer() {
 
     } catch (error) {
         console.error('Error evaluating answer:', error);
-        alert('Failed to evaluate answer. Please try again.');
+        const message = error.message || 'Failed to evaluate answer. Please try again.';
+        alert(`Error: ${message}\n\nCheck the browser console for details.`);
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -420,6 +472,10 @@ function nextQuestion() {
         document.getElementById('user-answer').value = '';
         timer.reset();
         timer.start();
+        updateQuestionNavButtons();
+    } else {
+        // At end of history: generate a new question (same topic/subtopic/difficulty)
+        generateQuestion();
     }
 }
 
@@ -434,7 +490,16 @@ function prevQuestion() {
         document.getElementById('user-answer').value = '';
         timer.reset();
         timer.start();
+        updateQuestionNavButtons();
     }
+}
+
+function updateQuestionNavButtons() {
+    const prevBtn = document.getElementById('prev-question-btn');
+    const nextBtn = document.getElementById('next-question-btn');
+    if (prevBtn) prevBtn.disabled = currentQuestionIndex <= 0;
+    // Next is always enabled: either goes to next in history or generates new question
+    if (nextBtn) nextBtn.disabled = false;
 }
 
 function showLearningPlan() {

@@ -16,7 +16,7 @@ According to the [AWS Bedrock Console](https://eu-central-1.console.aws.amazon.c
 - For Marketplace models: A user with Marketplace permissions must invoke once to enable account-wide
 
 ### What We've Verified
-1. ✅ Lambda code is using correct model ID: `anthropic.claude-3-sonnet-20240229-v1:0`
+1. ✅ Lambda code default model: `anthropic.claude-3-7-sonnet-20250219-v1:0` (Claude 3.7 Sonnet with reasoning)
 2. ✅ Lambda environment variable is set correctly
 3. ✅ IAM role has `bedrock:InvokeModel` permission for the model
 4. ✅ Model exists and is listed in the region
@@ -39,7 +39,7 @@ echo '{"anthropic_version":"bedrock-2023-05-31","max_tokens":10,"messages":[{"ro
 
 # Invoke model (this may trigger use case submission prompt)
 aws bedrock-runtime invoke-model \
-  --model-id anthropic.claude-3-sonnet-20240229-v1:0 \
+  --model-id anthropic.claude-3-7-sonnet-20250219-v1:0 \
   --region eu-central-1 \
   --body fileb://test-payload.b64 \
   output.json
@@ -52,13 +52,13 @@ Switch to Claude Haiku which typically doesn't require use case approval:
 aws lambda update-function-configuration \
   --function-name aws-interview-prep-api \
   --region eu-central-1 \
-  --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0}"
+  --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-7-sonnet-20250219-v1:0}"
 ```
 
 ### Testing After Fix
 Once access is granted, test the API:
 ```bash
-curl -X POST https://s7ow2cvh6i.execute-api.eu-central-1.amazonaws.com/prod/generate-question \
+curl -X POST https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com/prod/generate-question \
   -H "Content-Type: application/json" \
   -d '{"topic":"linux","subtopic":"processes","difficulty":"newbie"}'
 ```

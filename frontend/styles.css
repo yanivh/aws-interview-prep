@@ -1,22 +1,34 @@
 /**
- * Modern, Responsive CSS Styling
+ * AWS Skill Builder–inspired styling
+ * Reference: https://skillbuilder.aws/
  */
 
 :root {
-    --primary-color: #FF9900;
-    --primary-dark: #E68900;
-    --secondary-color: #232F3E;
+    /* AWS Skill Builder palette */
+    --aws-orange: #FF9900;
+    --aws-orange-hover: #EC7211;
+    --aws-navy: #232F3E;
+    --aws-navy-dark: #131A22;
+    --aws-blue: #0073BB;
+    --aws-blue-bright: #007ACC;
+    --primary-color: var(--aws-orange);
+    --primary-dark: var(--aws-orange-hover);
+    --secondary-color: var(--aws-navy);
     --background: #FFFFFF;
-    --surface: #F9FAFB;
-    --text-primary: #1A1A1A;
-    --text-secondary: #6B7280;
-    --border-color: #E5E7EB;
-    --success-color: #10B981;
+    --surface: #F2F3F3;
+    --surface-alt: #ECF9FD;
+    --text-primary: #232F3E;
+    --text-secondary: #545B64;
+    --border-color: #D5DBDB;
+    --success-color: #037F0C;
     --warning-color: #F59E0B;
-    --error-color: #EF4444;
-    --info-color: #3B82F6;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --error-color: #D13212;
+    --info-color: var(--aws-blue);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --radius: 8px;
+    --radius-sm: 4px;
 }
 
 * {
@@ -26,10 +38,11 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Open Sans', 'Amazon Ember', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: var(--text-primary);
     background-color: var(--surface);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
@@ -38,25 +51,40 @@ body {
     min-height: 100vh;
 }
 
-/* Header */
+/* Header – AWS Skill Builder style */
 .app-header {
-    background: var(--secondary-color);
-    color: white;
-    padding: 1rem 2rem;
+    background: var(--aws-navy);
+    color: #FFFFFF;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .app-header h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .header-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* Header buttons on dark background – white outline style */
+.app-header .btn-secondary {
+    background: transparent;
+    color: #FFFFFF;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.app-header .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 /* Main Content */
@@ -70,22 +98,25 @@ body {
     width: 100%;
 }
 
-/* Sidebar */
+/* Sidebar – card style like Skill Builder sections */
 .sidebar {
-    width: 250px;
+    width: 260px;
     background: var(--background);
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 1.5rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
     height: fit-content;
     position: sticky;
     top: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 .sidebar h2 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
     margin-bottom: 1rem;
-    color: var(--secondary-color);
+    color: var(--aws-navy);
+    letter-spacing: -0.01em;
 }
 
 .topic-nav {
@@ -129,24 +160,25 @@ body {
 }
 
 .subtopic-item.active {
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: 500;
+    background-color: var(--aws-orange);
+    color: #FFFFFF;
+    font-weight: 600;
 }
 
 /* Main Panel */
 .main-panel {
     flex: 1;
     background: var(--background);
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 2rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
-/* Mode Selector */
+/* Mode Selector – tab style like Skill Builder */
 .mode-selector {
     display: flex;
-    gap: 1rem;
+    gap: 0;
     margin-bottom: 2rem;
     border-bottom: 2px solid var(--border-color);
 }
@@ -156,11 +188,12 @@ body {
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-secondary);
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .mode-btn:hover {
@@ -168,20 +201,21 @@ body {
 }
 
 .mode-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    color: var(--aws-orange);
+    border-bottom-color: var(--aws-orange);
 }
 
-/* Selector Panel */
+/* Selector Panel – card style */
 .selector-panel {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     flex-wrap: wrap;
     align-items: end;
     margin-bottom: 2rem;
     padding: 1.5rem;
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
 }
 
 .selector-group {
@@ -197,11 +231,17 @@ body {
 }
 
 .selector-group select {
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
     font-size: 1rem;
-    background: white;
+    background: #FFFFFF;
+    min-width: 140px;
+}
+
+.selector-group select:focus {
+    outline: none;
+    border-color: var(--aws-blue);
 }
 
 .difficulty-buttons {
@@ -212,63 +252,69 @@ body {
 .difficulty-btn {
     padding: 0.5rem 1rem;
     border: 2px solid var(--border-color);
-    background: white;
-    border-radius: 6px;
+    background: #FFFFFF;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-weight: 600;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
 .difficulty-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--aws-orange);
+    color: var(--aws-orange);
 }
 
 .difficulty-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+    background: var(--aws-orange);
+    color: #FFFFFF;
+    border-color: var(--aws-orange);
 }
 
-/* Buttons */
+/* Buttons – AWS Skill Builder style */
 .btn-primary, .btn-secondary, .btn-small {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    color: white;
+    background: var(--aws-orange);
+    color: #FFFFFF;
+    border: 2px solid var(--aws-orange);
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
+    background: var(--aws-orange-hover);
+    border-color: var(--aws-orange-hover);
 }
 
 .btn-primary:disabled {
     background: var(--text-secondary);
+    border-color: var(--text-secondary);
     cursor: not-allowed;
 }
 
+/* Outline style like Skill Builder “Create a free account” */
 .btn-secondary {
-    background: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    background: #FFFFFF;
+    color: var(--aws-blue);
+    border: 2px solid var(--aws-blue);
 }
 
 .btn-secondary:hover {
-    background: var(--border-color);
+    background: #F2F3F3;
+    border-color: var(--aws-blue-bright);
+    color: var(--aws-blue-bright);
 }
 
 .btn-small {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
+    font-weight: 600;
 }
 
 /* Question Container */
@@ -285,32 +331,34 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
 }
 
 .timer {
     font-size: 1.5rem;
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
-    color: var(--secondary-color);
+    font-weight: 700;
+    font-family: 'Open Sans', 'Courier New', monospace;
+    color: var(--aws-navy);
 }
 
 .question-card {
     background: var(--background);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 2rem;
     margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
 }
 
 .question-text {
     font-size: 1.25rem;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 2rem;
-    line-height: 1.8;
-    color: var(--text-primary);
+    line-height: 1.7;
+    color: var(--aws-navy);
 }
 
 .answer-section {
@@ -326,13 +374,19 @@ body {
 
 .answer-section textarea {
     width: 100%;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
     font-size: 1rem;
     font-family: inherit;
     resize: vertical;
     margin-bottom: 1rem;
+    transition: border-color 0.15s;
+}
+
+.answer-section textarea:focus {
+    outline: none;
+    border-color: var(--aws-blue);
 }
 
 .answer-actions {
@@ -344,9 +398,9 @@ body {
 .hint-container {
     margin-top: 2rem;
     padding: 1.5rem;
-    background: var(--surface);
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
+    background: var(--surface-alt);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--aws-orange);
 }
 
 .hint-container.hidden {
@@ -371,19 +425,22 @@ body {
 
 .answer-section .section-header h3 {
     font-size: 1.25rem;
-    color: var(--secondary-color);
+    font-weight: 700;
+    color: var(--aws-navy);
 }
 
+/* Skill Builder–style gradient card */
 .summary-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #B49FF7 0%, #E8D5F2 100%);
+    color: var(--aws-navy);
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     margin-bottom: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .summary-card .section-header {
-    color: white;
+    color: var(--aws-navy);
 }
 
 .steps-section {
@@ -399,8 +456,8 @@ body {
 .step-item {
     padding: 1rem;
     background: var(--surface);
-    border-radius: 6px;
-    border-left: 4px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--aws-orange);
 }
 
 .step-header {
@@ -411,11 +468,11 @@ body {
 }
 
 .step-number {
-    background: var(--primary-color);
-    color: white;
+    background: var(--aws-orange);
+    color: #FFFFFF;
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 600;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
 }
 
 .step-description {
@@ -459,10 +516,10 @@ body {
 .aws-service-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 6px;
-    font-weight: 500;
+    background: var(--aws-orange);
+    color: #FFFFFF;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
     font-size: 0.875rem;
 }
 
@@ -474,7 +531,7 @@ body {
 /* Callout Boxes */
 .callout-box {
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     margin-bottom: 1.5rem;
     border-left: 4px solid;
 }
@@ -538,12 +595,13 @@ body {
     top: 0.5rem;
     right: 0.5rem;
     padding: 0.25rem 0.75rem;
-    background: var(--primary-color);
-    color: white;
+    background: var(--aws-orange);
+    color: #FFFFFF;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* Comparison Table */
@@ -565,8 +623,8 @@ body {
 
 .comparison-table th {
     background: var(--surface);
-    font-weight: 600;
-    color: var(--secondary-color);
+    font-weight: 700;
+    color: var(--aws-navy);
 }
 
 .comparison-table td ul {
@@ -578,13 +636,19 @@ body {
 .feedback-panel {
     margin-top: 2rem;
     padding: 1.5rem;
-    background: var(--surface);
-    border-radius: 8px;
-    border-left: 4px solid var(--info-color);
+    background: var(--surface-alt);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--aws-blue);
 }
 
 .feedback-panel.hidden {
     display: none;
+}
+
+.feedback-panel .feedback-error {
+    color: var(--error-color);
+    font-weight: 500;
+    margin: 0;
 }
 
 .feedback-header {
@@ -627,7 +691,8 @@ body {
 
 .feedback-section h4 {
     margin-bottom: 0.75rem;
-    color: var(--secondary-color);
+    color: var(--aws-navy);
+    font-weight: 700;
 }
 
 .feedback-section ul {
@@ -718,7 +783,7 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: var(--primary-color);
+    background: var(--aws-orange);
     transition: width 0.3s;
 }
 
@@ -759,9 +824,9 @@ body {
 .learning-phase {
     padding: 1.5rem;
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: var(--radius);
     margin-bottom: 1.5rem;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--aws-orange);
 }
 
 .phase-header {
@@ -772,17 +837,17 @@ body {
 }
 
 .phase-number {
-    background: var(--primary-color);
-    color: white;
+    background: var(--aws-orange);
+    color: #FFFFFF;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
 }
 
 .phase-name {
     font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--secondary-color);
+    font-weight: 700;
+    color: var(--aws-navy);
 }
 
 .phase-weeks {
@@ -825,14 +890,16 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: #FFFFFF;
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     max-width: 800px;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
     width: 90%;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
 }
 
 .close-modal {
@@ -854,6 +921,17 @@ body {
     display: flex;
     justify-content: space-between;
     margin-top: 2rem;
+}
+
+/* Links – AWS Skill Builder blue */
+a {
+    color: var(--aws-blue);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--aws-blue-bright);
+    text-decoration: underline;
 }
 
 /* Utility Classes */

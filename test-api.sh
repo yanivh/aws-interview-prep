@@ -3,7 +3,9 @@
 
 set -e
 
-API_ENDPOINT="https://s7ow2cvh6i.execute-api.eu-central-1.amazonaws.com/prod"
+# Use env vars so no keys/URLs are committed. Example: export API_ENDPOINT="https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com/prod"
+API_ENDPOINT="${API_ENDPOINT:-https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com/prod}"
+ORIGIN="${ORIGIN:-http://YOUR_BUCKET.s3-website.eu-central-1.amazonaws.com}"
 REGION="eu-central-1"
 
 echo "🧪 Testing Generate Question API"
@@ -14,7 +16,7 @@ echo ""
 echo "Test 1: OPTIONS preflight request..."
 OPTIONS_RESPONSE=$(curl -s -o /tmp/options-response.txt -w "%{http_code}" -X OPTIONS \
   "${API_ENDPOINT}/generate-question" \
-  -H "Origin: http://aws-interview-prep-yanivhamo-1771254018.s3-website.eu-central-1.amazonaws.com" \
+  -H "Origin: ${ORIGIN}" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Content-Type")
 
@@ -31,17 +33,28 @@ else
 fi
 echo ""
 
-# Test 2: POST request
+# Test 2: POST request (retry on 504 - API Gateway has 29s timeout; Bedrock can be slow)
 echo "Test 2: POST generate-question request..."
-POST_RESPONSE=$(curl -s -o /tmp/post-response.json -w "%{http_code}" -X POST \
-  "${API_ENDPOINT}/generate-question" \
-  -H "Content-Type: application/json" \
-  -H "Origin: http://aws-interview-prep-yanivhamo-1771254018.s3-website.eu-central-1.amazonaws.com" \
-  -d '{
-    "topic": "linux",
-    "subtopic": "processes",
-    "difficulty": "intermediate"
-  }')
+MAX_POST_ATTEMPTS=3
+POST_RESPONSE=""
+for attempt in $(seq 1 $MAX_POST_ATTEMPTS); do
+    POST_RESPONSE=$(curl -s -o /tmp/post-response.json -w "%{http_code}" -X POST \
+      "${API_ENDPOINT}/generate-question" \
+      -H "Content-Type: application/json" \
+      -H "Origin: ${ORIGIN}" \
+      -d '{
+        "topic": "linux",
+        "subtopic": "processes",
+        "difficulty": "intermediate"
+      }')
+    if [ "$POST_RESPONSE" = "200" ]; then
+        break
+    fi
+    if [ "$POST_RESPONSE" = "504" ] && [ $attempt -lt $MAX_POST_ATTEMPTS ]; then
+        echo "  504 Gateway Timeout (attempt $attempt/$MAX_POST_ATTEMPTS). Retrying..."
+        sleep 3
+    fi
+done
 
 echo "HTTP Status: $POST_RESPONSE"
 echo ""

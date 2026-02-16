@@ -113,7 +113,7 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
         --function-name $FUNCTION_NAME \
         --timeout 300 \
         --memory-size 512 \
-        --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0}" \
+        --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-7-sonnet-20250219-v1:0}" \
         --region $REGION > /dev/null 2>&1 || echo "Configuration update skipped (may already be set)"
 else
     echo "Creating Lambda function..."
@@ -125,7 +125,7 @@ else
         --zip-file fileb://lambda/lambda-deployment.zip \
         --timeout 300 \
         --memory-size 512 \
-        --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0}" \
+        --environment "Variables={BEDROCK_MODEL_ID=anthropic.claude-3-7-sonnet-20250219-v1:0}" \
         --region $REGION > /dev/null
 fi
 

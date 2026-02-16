@@ -102,7 +102,7 @@ export S3_BUCKET_NAME="your-bucket-name"
 
 **Lambda Function:**
 - `AWS_REGION`: eu-central-1
-- `BEDROCK_MODEL_ID`: anthropic.claude-3-sonnet-20240229-v1:0
+- `BEDROCK_MODEL_ID`: (optional) Default `anthropic.claude-3-7-sonnet-20250219-v1:0` (Claude 3.7 Sonnet with extended thinking for better questions and explanations). Other reasoning models: Sonnet 4, Opus 4. Enable model in [Bedrock Model Access](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html).
 - `BEDROCK_AGENT_ID`: (optional) Your Bedrock Agent ID
 
 **Frontend:**

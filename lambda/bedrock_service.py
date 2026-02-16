@@ -11,6 +11,18 @@ from botocore.exceptions import ClientError
 from aws_context import AWSContext
 
 
+# Model IDs that support extended thinking (reasoning) per AWS docs:
+# https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html
+REASONING_MODEL_IDS = {
+    "anthropic.claude-3-7-sonnet-20250219-v1:0",   # Claude 3.7 Sonnet
+    "anthropic.claude-sonnet-4-20250514-v1:0",     # Claude Sonnet 4
+    "anthropic.claude-sonnet-4-5-20250929-v1:0",   # Claude Sonnet 4.5
+    "anthropic.claude-opus-4-20250514-v1:0",       # Claude Opus 4
+    "anthropic.claude-opus-4-5-20251101-v1:0",    # Claude Opus 4.5
+    "anthropic.claude-haiku-4-5-20251001-v1:0",   # Claude Haiku 4.5
+}
+
+
 class BedrockService:
     """Service for interacting with AWS Bedrock"""
     
@@ -19,10 +31,9 @@ class BedrockService:
         import boto3
         session = boto3.Session()
         self.region = session.region_name or os.environ.get('AWS_REGION', 'eu-central-1')
-        # Default to Claude 3.5 Haiku (fastest model, optimized for speed)
-        # Alternative fast models: anthropic.claude-3-haiku-20240307-v1:0 (older Haiku)
-        # For even faster: Consider Amazon Titan models for simple tasks
-        self.model_id = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v2:0')
+        # Default: Claude 3.7 Sonnet with extended thinking for better questions and explanations
+        # Set BEDROCK_MODEL_ID to override. Reasoning models: 3.7 Sonnet, Sonnet 4, Opus 4, etc.
+        self.model_id = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-7-sonnet-20250219-v1:0')
         self.agent_id = os.environ.get('BEDROCK_AGENT_ID', '')
         self.agent_alias_id = os.environ.get('BEDROCK_AGENT_ALIAS_ID', 'TSTALIASID')
         
@@ -49,6 +60,7 @@ class BedrockService:
         system_prompt = self.aws_context.get_role_system_prompt()
         aws_context = self.aws_context.get_aws_context_prompt(topic, subtopic)
         difficulty_instructions = self._get_difficulty_instructions(difficulty)
+        question_style = self._get_question_style_instructions(difficulty)
         
         prompt = f"""{system_prompt}
 
@@ -57,13 +69,21 @@ class BedrockService:
 Difficulty: {difficulty.capitalize()}
 {difficulty_instructions}
 
-Generate ONE AWS Systems Engineer interview question about {topic} - {subtopic} ({difficulty} level).
+{question_style}
 
-**CRITICAL: Return ONLY JSON object. NO text before/after. Start with {{ and end with }}.**
+Generate ONE AWS Systems Engineer interview question about **{topic}** / **{subtopic}** at **{difficulty}** level.
 
-Return JSON:
+**QUESTION REQUIREMENTS (mandatory):**
+- The "question" field MUST be a single, concrete, technical interview question that an interviewer would ask aloud.
+- Write a full question (e.g. "How would you troubleshoot high CPU caused by runaway processes on an EC2 instance?" or "Explain the difference between zombie and orphan processes and how they affect AWS workloads.").
+- Do NOT use placeholders or generic text like "Sample question about X in Y" or "Question text here"—those are invalid.
+- The question should be specific to {topic} and {subtopic}, and appropriate for {difficulty} level.
+
+**CRITICAL: Return ONLY a JSON object. NO markdown, NO text before or after. Start with {{ and end with }}.**
+
+Return JSON in this exact shape:
 {{
-  "question": "Question text here",
+  "question": "Your full, specific interview question as one sentence or short paragraph?",
   "answer": {{
     "summary": "Brief 1-2 sentence summary",
     "steps": [
@@ -87,7 +107,7 @@ Return JSON:
   "difficulty": "{difficulty}"
 }}
 
-**CRITICAL: Return ONLY the JSON object. NO text before {{. NO text after }}.**
+**CRITICAL: Output ONLY the JSON object. No ```json, no explanation, no text before {{ or after }}.**
 """
         
         response = self._invoke_bedrock_model(prompt)
@@ -97,11 +117,18 @@ Return JSON:
         if isinstance(extracted, dict):
             if "answer" in extracted and isinstance(extracted["answer"], dict):
                 extracted["answer"] = self._normalize_answer_structure(extracted["answer"])
+            # Reject placeholder-style questions so we don't surface "Sample question about..."
+            q = (extracted.get("question") or "").strip()
+            if not q or "sample question about" in q.lower() or q.lower().startswith("question text here"):
+                extracted["question"] = self._extract_question_from_raw_response(response) or q or f"Interview question: {subtopic} in {topic} ({difficulty})"
             return extracted
         else:
-            # Fallback
+            # Fallback when JSON parsing failed: try to get a real question from raw response
+            fallback_question = self._extract_question_from_raw_response(response)
+            if not fallback_question:
+                fallback_question = f"Interview question: {subtopic} in {topic} ({difficulty} level)"
             return {
-                "question": f"Sample question about {subtopic} in {topic}",
+                "question": fallback_question,
                 "answer": self._normalize_answer_structure({}),
                 "topic": topic,
                 "subtopic": subtopic,
@@ -430,13 +457,12 @@ Return JSON:
         }
     
     def _invoke_bedrock_model(self, prompt: str) -> str:
-        """Invoke Bedrock model with prompt"""
-        
-        # Prepare request body for Claude
+        """Invoke Bedrock model with prompt. Uses extended thinking when model supports it."""
+        use_reasoning = self.model_id in REASONING_MODEL_IDS
+        # Prepare request body for Claude Messages API
         body = {
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 800,  # Reduced for faster responses (API Gateway 29s limit)
-            "temperature": 0.2,  # Lower temperature for faster, more deterministic responses
+            "max_tokens": 2048 if use_reasoning else 800,  # More tokens for reasoning + full answer
             "messages": [
                 {
                     "role": "user",
@@ -444,6 +470,12 @@ Return JSON:
                 }
             ]
         }
+        if use_reasoning:
+            # Extended thinking: better reasoning, more accurate explanations (per AWS inference-reasoning docs)
+            # Cannot use temperature/top_p/top_k when thinking is enabled
+            body["thinking"] = {"type": "enabled", "budget_tokens": 2048}
+        else:
+            body["temperature"] = 0.2
         
         try:
             response = self.bedrock_runtime.invoke_model(
@@ -537,6 +569,30 @@ Return JSON:
         
         return normalized
     
+    def _extract_question_from_raw_response(self, response: str) -> Optional[str]:
+        """When JSON parsing fails, try to extract a question from raw LLM text (e.g. first line ending with ?)."""
+        if not response or not response.strip():
+            return None
+        import re
+        text = response.strip()
+        # Prefer line that looks like a question (ends with ?) and is not a placeholder
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or len(line) < 15:
+                continue
+            if line.endswith("?") and "sample question about" not in line.lower():
+                # Strip common prefixes and markdown
+                line = re.sub(r"^[\s*\-#\"']+", "", line)
+                if len(line) > 20:
+                    return line
+        # Otherwise first substantial sentence ending with ?
+        match = re.search(r"([^.!?\n]{20,}?\?)", text)
+        if match:
+            candidate = match.group(1).strip()
+            if "sample question" not in candidate.lower():
+                return candidate
+        return None
+    
     def _extract_json_from_response(self, response: str) -> Any:
         """Extract JSON from LLM response using optimized regex and bracket matching"""
         import re
@@ -545,6 +601,11 @@ Return JSON:
         
         # Strip leading/trailing whitespace
         response = response.strip()
+        # Strip markdown code fences (```json ... ``` or ``` ... ```)
+        if response.startswith("```"):
+            response = re.sub(r"^```(?:json)?\s*", "", response)
+            response = re.sub(r"\s*```\s*$", "", response)
+            response = response.strip()
         
         # Remove any leading text before first [ or {
         json_start = -1
@@ -679,12 +740,21 @@ Return JSON:
             "pro": "Complex AWS architecture, optimization, advanced AWS service integration"
         }
         return instructions.get(difficulty.lower(), instructions["intermediate"])
+
+    def _get_question_style_instructions(self, difficulty: str) -> str:
+        """Get difficulty-specific question style so generated questions are concrete."""
+        styles = {
+            "newbie": "Question style: definitions, basic concepts, and simple how-to (e.g. 'What is X?', 'How do you list running processes?').",
+            "intermediate": "Question style: scenario-based or troubleshooting (e.g. 'How would you debug X on an EC2 instance?', 'When would you use A vs B?').",
+            "pro": "Question style: advanced scenario, trade-offs, or design (e.g. 'How would you design X for high availability?', 'Explain trade-offs between X and Y in AWS.', 'How would you troubleshoot X under load?')."
+        }
+        return styles.get(difficulty.lower(), styles["intermediate"])
     
     def _create_fallback_candidates(self, topic: str, subtopic: str, difficulty: str) -> List[Dict[str, Any]]:
         """Create fallback candidate structure if generation fails"""
         return [
             {
-                "question": f"Sample question about {subtopic} in {topic}",
+                "question": f"Interview question: {subtopic} in {topic} ({difficulty} level). Generate again for a specific question.",
                 "answer": {
                     "summary": "Sample solution summary",
                     "steps": [],
