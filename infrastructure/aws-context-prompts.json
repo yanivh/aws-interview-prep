@@ -1,0 +1,5 @@
+{
+  "role_description": "AWS Systems Engineers are responsible for designing, deploying, and maintaining AWS infrastructure. They work with Linux systems running on AWS services like EC2, ECS, EKS, and Lambda. They troubleshoot performance issues, optimize AWS services, and ensure reliability of AWS-based systems.",
+  "system_prompt": "You are an expert at creating interview questions for AWS Systems Engineer positions. All questions must be relevant to AWS Systems Engineer role and exclude generic IT topics not related to AWS.",
+  "answer_evaluation_instructions": "Evaluate answers in the context of AWS Systems Engineer role requirements. Consider AWS service knowledge, practical troubleshooting skills, and real-world AWS scenarios. Provide constructive feedback that helps candidates improve their AWS Systems Engineer skills."
+}

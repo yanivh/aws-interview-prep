@@ -1,0 +1,125 @@
+openapi: 3.0.0
+info:
+  title: AWS Interview Prep API
+  version: 1.0.0
+  description: API for AWS Systems Engineer Interview Preparation
+servers:
+  - url: https://{api-id}.execute-api.eu-central-1.amazonaws.com/{stage}
+    variables:
+      api-id:
+        default: YOUR_API_ID
+      stage:
+        default: prod
+paths:
+  /generate-question:
+    post:
+      summary: Generate interview question
+      operationId: generateQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - topic
+                - subtopic
+                - difficulty
+              properties:
+                topic:
+                  type: string
+                subtopic:
+                  type: string
+                difficulty:
+                  type: string
+                  enum: [newbie, intermediate, pro]
+      responses:
+        '200':
+          description: Question generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+  /evaluate-answer:
+    post:
+      summary: Evaluate user answer
+      operationId: evaluateAnswer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - topic
+                - question
+                - user_answer
+                - difficulty
+              properties:
+                topic:
+                  type: string
+                question:
+                  type: string
+                user_answer:
+                  type: string
+                difficulty:
+                  type: string
+      responses:
+        '200':
+          description: Answer evaluated successfully
+  /topics:
+    get:
+      summary: Get topics list
+      operationId: getTopics
+      responses:
+        '200':
+          description: Topics retrieved successfully
+  /flashcard:
+    get:
+      summary: Generate flashcard
+      operationId: getFlashcard
+      parameters:
+        - name: topic
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: subtopic
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Flashcard generated successfully
+  /learning-plan:
+    get:
+      summary: Get learning plan
+      operationId: getLearningPlan
+      responses:
+        '200':
+          description: Learning plan retrieved successfully
+  /progress:
+    get:
+      summary: Get user progress
+      operationId: getProgress
+      responses:
+        '200':
+          description: Progress retrieved successfully
+    post:
+      summary: Update user progress
+      operationId: updateProgress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Progress updated successfully

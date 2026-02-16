@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Interview Prep - Systems Engineer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>AWS Systems Engineer Interview Prep</h1>
+            <div class="header-actions">
+                <button id="learning-plan-btn" class="btn-secondary">Learning Plan</button>
+                <button id="progress-btn" class="btn-secondary">Progress</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar" id="topic-navigation">
+                <h2>Topics</h2>
+                <nav id="topic-nav"></nav>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="main-panel">
+                <!-- Mode Selector -->
+                <div class="mode-selector">
+                    <button id="practice-mode-btn" class="mode-btn active">Practice Mode</button>
+                    <button id="flashcard-mode-btn" class="mode-btn">Flashcard Mode</button>
+                </div>
+
+                <!-- Practice Mode View -->
+                <div id="practice-view" class="view active">
+                    <!-- Topic and Difficulty Selector -->
+                    <div class="selector-panel">
+                        <div class="selector-group">
+                            <label>Topic:</label>
+                            <select id="topic-select"></select>
+                        </div>
+                        <div class="selector-group">
+                            <label>Subtopic:</label>
+                            <select id="subtopic-select"></select>
+                        </div>
+                        <div class="selector-group">
+                            <label>Difficulty:</label>
+                            <div class="difficulty-buttons" id="difficulty-selector">
+                                <button class="difficulty-btn" data-difficulty="newbie">Newbie</button>
+                                <button class="difficulty-btn" data-difficulty="intermediate">Intermediate</button>
+                                <button class="difficulty-btn" data-difficulty="pro">Pro</button>
+                            </div>
+                        </div>
+                        <button id="generate-question-btn" class="btn-primary">Generate Question</button>
+                    </div>
+
+                    <!-- Question Display -->
+                    <div id="question-container" class="question-container hidden">
+                        <div class="timer-section">
+                            <div class="timer" id="timer">00:00</div>
+                            <button id="reset-timer-btn" class="btn-small">Reset</button>
+                        </div>
+
+                        <div class="question-card" id="question-card">
+                            <div class="question-text" id="question-text"></div>
+                            
+                            <!-- Answer Input -->
+                            <div class="answer-section">
+                                <label for="user-answer">Your Answer:</label>
+                                <textarea id="user-answer" rows="6" placeholder="Type your answer here..."></textarea>
+                                <div class="answer-actions">
+                                    <button id="submit-answer-btn" class="btn-primary">Submit Answer</button>
+                                    <button id="show-hint-btn" class="btn-secondary">Show Hint</button>
+                                </div>
+                            </div>
+
+                            <!-- Hint/Answer Reveal -->
+                            <div id="hint-container" class="hint-container hidden">
+                                <div id="answer-visualizer"></div>
+                            </div>
+
+                            <!-- Feedback Panel -->
+                            <div id="feedback-panel" class="feedback-panel hidden"></div>
+                        </div>
+
+                        <!-- Navigation -->
+                        <div class="question-navigation">
+                            <button id="prev-question-btn" class="btn-secondary" disabled>Previous</button>
+                            <button id="next-question-btn" class="btn-primary">Next Question</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flashcard Mode View -->
+                <div id="flashcard-view" class="view hidden">
+                    <div class="flashcard-container">
+                        <div class="flashcard-selector">
+                            <div class="selector-group">
+                                <label>Topic:</label>
+                                <select id="flashcard-topic-select"></select>
+                            </div>
+                            <div class="selector-group">
+                                <label>Subtopic:</label>
+                                <select id="flashcard-subtopic-select"></select>
+                            </div>
+                            <div class="selector-group">
+                                <label>Difficulty:</label>
+                                <select id="flashcard-difficulty-select">
+                                    <option value="newbie">Newbie</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="pro">Pro</option>
+                                </select>
+                            </div>
+                            <button id="generate-flashcard-btn" class="btn-primary">Generate Flashcard</button>
+                        </div>
+
+                        <div id="flashcard-display" class="flashcard-display hidden">
+                            <div class="flashcard" id="flashcard">
+                                <div class="flashcard-front" id="flashcard-front"></div>
+                                <div class="flashcard-back" id="flashcard-back"></div>
+                            </div>
+                            <button id="flip-flashcard-btn" class="btn-primary">Flip Card</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Learning Plan Modal -->
+        <div id="learning-plan-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Learning Plan</h2>
+                <div id="learning-plan-content"></div>
+            </div>
+        </div>
+
+        <!-- Progress Dashboard Modal -->
+        <div id="progress-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Progress Dashboard</h2>
+                <div id="progress-dashboard"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="learning-plan.js"></script>
+    <script src="progress-tracker.js"></script>
+    <script src="components/topic-navigation.js"></script>
+    <script src="components/difficulty-selector.js"></script>
+    <script src="components/question-card.js"></script>
+    <script src="components/timer.js"></script>
+    <script src="components/hint-reveal.js"></script>
+    <script src="components/answer-visualizer.js"></script>
+    <script src="components/step-indicator.js"></script>
+    <script src="components/aws-service-badge.js"></script>
+    <script src="components/code-block.js"></script>
+    <script src="components/comparison-table.js"></script>
+    <script src="components/callout-box.js"></script>
+    <script src="components/feedback-panel.js"></script>
+    <script src="components/learning-path.js"></script>
+    <script src="components/progress-dashboard.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
