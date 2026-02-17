@@ -50,8 +50,13 @@ cd lambda
 mkdir -p deployment/deploy
 cp lambda_function.py bedrock_service.py aws_context.py models.py deployment/deploy/
 
-echo "Installing dependencies..."
-python3 -m pip install boto3 pydantic botocore -t deployment/deploy/ --quiet 2>&1 | grep -v "already satisfied" || pip3 install boto3 pydantic botocore -t deployment/deploy/ --quiet 2>&1 | grep -v "already satisfied" || echo "Note: Dependencies will be installed by Lambda runtime"
+echo "Installing dependencies (Linux-compatible for Lambda)..."
+python3 -m pip install --platform manylinux2014_x86_64 --implementation cp --python-version 3.11 --only-binary=:all: boto3 botocore -t deployment/deploy/ --quiet 2>&1 || true
+python3 -m pip install --platform manylinux2014_x86_64 --implementation cp --python-version 3.11 --only-binary=:all: pydantic -t deployment/deploy/ --quiet 2>&1 || true
+# Fallback if cross-install fails: install without platform (may fail on Lambda if built on Mac)
+if [ ! -f deployment/deploy/pydantic/__init__.py ]; then
+  python3 -m pip install boto3 pydantic botocore -t deployment/deploy/ --quiet 2>&1 | grep -v "already satisfied" || true
+fi
 
 cd deployment/deploy
 zip -r ../../lambda-deployment.zip . -q

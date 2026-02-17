@@ -31,9 +31,9 @@ class BedrockService:
         import boto3
         session = boto3.Session()
         self.region = session.region_name or os.environ.get('AWS_REGION', 'eu-central-1')
-        # Default: Claude 3.7 Sonnet with extended thinking for better questions and explanations
-        # Set BEDROCK_MODEL_ID to override. Reasoning models: 3.7 Sonnet, Sonnet 4, Opus 4, etc.
-        self.model_id = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-7-sonnet-20250219-v1:0')
+        # Default: Claude 3 Haiku (reliable on-demand). For 3.7 Sonnet use an inference profile ID
+        # e.g. us.anthropic.claude-3-7-sonnet-20250219-v1:0 (see Bedrock inference profiles docs).
+        self.model_id = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-haiku-20240307-v1:0')
         self.agent_id = os.environ.get('BEDROCK_AGENT_ID', '')
         self.agent_alias_id = os.environ.get('BEDROCK_AGENT_ALIAS_ID', 'TSTALIASID')
         
@@ -117,6 +117,12 @@ Return JSON in this exact shape:
         if isinstance(extracted, dict):
             if "answer" in extracted and isinstance(extracted["answer"], dict):
                 extracted["answer"] = self._normalize_answer_structure(extracted["answer"])
+            else:
+                extracted["answer"] = self._normalize_answer_structure(extracted.get("answer") or {})
+            # Ensure topic/subtopic/difficulty in response
+            extracted["topic"] = extracted.get("topic") or topic
+            extracted["subtopic"] = extracted.get("subtopic") or subtopic
+            extracted["difficulty"] = extracted.get("difficulty") or difficulty
             # Reject placeholder-style questions so we don't surface "Sample question about..."
             q = (extracted.get("question") or "").strip()
             if not q or "sample question about" in q.lower() or q.lower().startswith("question text here"):
@@ -483,20 +489,34 @@ Return JSON:
                 body=json.dumps(body)
             )
             
-            response_body = json.loads(response['body'].read())
-            
-            # Extract text from Claude response
-            if 'content' in response_body:
-                text = ""
-                for block in response_body['content']:
-                    if block['type'] == 'text':
-                        text += block['text']
-                return text
-            
+            raw_body = response.get('body')
+            if raw_body is None:
+                raise ValueError("Bedrock response has no body")
+            response_body = json.loads(raw_body.read())
+            if not isinstance(response_body, dict):
+                return str(response_body)
+
+            # Extract text from Claude Messages API (skip thinking/redacted_thinking blocks)
+            content = response_body.get('content')
+            if isinstance(content, list):
+                text_parts = []
+                for block in content:
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get('type') == 'text':
+                        text_parts.append(block.get('text', ''))
+                text = ''.join(text_parts)
+                if text:
+                    return text
+                # Empty text (e.g. only thinking blocks) - return placeholder so caller can fallback
+                return '{"question":"","answer":{},"topic":"","subtopic":"","difficulty":""}'
+
             return str(response_body)
             
         except ClientError as e:
-            print(f"Bedrock invocation error: {str(e)}")
+            error_code = e.response.get('Error', {}).get('Code', '')
+            error_msg = str(e)
+            print(f"Bedrock invocation error: {error_code} - {error_msg}")
             raise
     
     def _normalize_answer_structure(self, answer: Dict[str, Any]) -> Dict[str, Any]:

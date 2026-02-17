@@ -2,6 +2,7 @@
 AWS Interview Prep - Lambda Function Handler
 Main Lambda handler with API Gateway integration
 """
+import base64
 import json
 import os
 from typing import Dict, Any
@@ -20,6 +21,7 @@ from models import (
 )
 from bedrock_service import BedrockService
 from aws_context import AWSContext
+from botocore.exceptions import ClientError
 
 # Initialize services
 bedrock_service = BedrockService()
@@ -42,12 +44,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         path_parameters = event.get('pathParameters') or {}
         query_parameters = event.get('queryStringParameters') or {}
         
-        # Parse request body
+        # Parse request body (API Gateway may base64-encode it)
         body = {}
-        if event.get('body'):
+        raw_body = event.get('body')
+        if raw_body:
             try:
-                body = json.loads(event['body'])
-            except (json.JSONDecodeError, TypeError):
+                if event.get('isBase64Encoded'):
+                    raw_body = base64.b64decode(raw_body).decode('utf-8')
+                body = json.loads(raw_body) if isinstance(raw_body, str) else {}
+            except (json.JSONDecodeError, TypeError, ValueError):
                 body = {}
         
         # Route to appropriate handler
@@ -111,8 +116,24 @@ def handle_generate_question(body: Dict[str, Any]) -> Dict[str, Any]:
     
     except ValueError as e:
         return create_response(400, {'error': 'Invalid request', 'message': str(e)})
+    except ClientError as e:
+        err = e.response.get('Error', {})
+        code = err.get('Code', '')
+        msg = err.get('Message', str(e))
+        print(f"Bedrock ClientError: {code} - {msg}")
+        if 'AccessDenied' in code or 'access' in msg.lower():
+            user_msg = (
+                'AWS Bedrock model access denied. Enable the model in AWS Bedrock (eu-central-1): '
+                'open Model catalog, select the Claude model, and submit use case details if prompted. '
+                'See TROUBLESHOOTING.md for details.'
+            )
+        else:
+            user_msg = msg
+        return create_response(503, {'error': 'Service unavailable', 'message': user_msg})
     except Exception as e:
         print(f"Error generating question: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return create_response(500, {'error': 'Failed to generate question', 'message': str(e)})
 
 

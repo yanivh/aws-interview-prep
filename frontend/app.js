@@ -221,12 +221,8 @@ async function generateQuestion() {
             body: JSON.stringify({ topic, subtopic, difficulty })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        
+
         // Handle API Gateway response format (if body is a string, parse it)
         let questionData = data;
         if (data.body && typeof data.body === 'string') {
@@ -236,8 +232,14 @@ async function generateQuestion() {
                 console.error('Error parsing response body:', e);
             }
         }
+
+        // On HTTP error, surface the API error message
+        if (!response.ok) {
+            const msg = questionData.message || questionData.error || `HTTP error! status: ${response.status}`;
+            throw new Error(msg);
+        }
         
-        // Check if we got an error response
+        // Check if we got an error response (e.g. 200 with error payload)
         if (questionData.error) {
             throw new Error(questionData.message || questionData.error);
         }
