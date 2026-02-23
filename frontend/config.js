@@ -7,7 +7,7 @@ const CONFIG = {
     // Do NOT use "abc123xyz" or "YOUR_API_ID" - those are placeholders (DNS will fail).
     // Get your real URL by running: ./QUICK_DEPLOY.sh  (it will print and update this for you)
     // Or in AWS Console: API Gateway → your API → "Invoke URL"
-    API_ENDPOINT: 'https://s7ow2cvh6i.execute-api.eu-central-1.amazonaws.com/prod',
+    API_ENDPOINT: 'https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com/prod',
 
     // Returns true if the API endpoint is still a placeholder (not configured)
     isApiPlaceholder() {
